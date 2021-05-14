@@ -396,6 +396,22 @@ cmd_kheapstats(int nargs, char **args)
 	return 0;
 }
 
+
+/*
+ * Command to enable the output of debugging messages of type DB THREADS.
+ * Any kernel commands that are run after dth should run with 
+ * DB_THREADS debugging messages enabled.  
+ */
+static int cmd_dth(int nargs, char **args) {
+	(void)nargs;
+	(void)args;
+
+	dbflags = 0x0010;
+
+	return 0;
+}
+
+
 ////////////////////////////////////////
 //
 // Menus.
@@ -430,13 +446,14 @@ static const char *opsmenu[] = {
 	"[p]       Other program             ",
 	"[mount]   Mount a filesystem        ",
 	"[unmount] Unmount a filesystem      ",
-	"[bootfs]  Set \"boot\" filesystem     ",
+	"[bootfs]  Set \"boot\" filesystem   ",
 	"[pf]      Print a file              ",
 	"[cd]      Change directory          ",
 	"[pwd]     Print current directory   ",
 	"[sync]    Sync filesystems          ",
 	"[panic]   Intentional panic         ",
 	"[q]       Quit and shut down        ",
+	"[dth]     DB_THREADS debug          ",
 	NULL
 };
 
@@ -549,6 +566,7 @@ static struct {
 	{ "q",		cmd_quit },
 	{ "exit",	cmd_quit },
 	{ "halt",	cmd_quit },
+	{ "dth",    cmd_dth },
 
 #if OPT_SYNCHPROBS
 	/* in-kernel synchronization problem(s) */
