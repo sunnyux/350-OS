@@ -1,0 +1,60 @@
+Notes on local installation of OS/161 on Manjaro Linux
+
+I was following this link https://student.cs.uwaterloo.ca/~cs350/common/Install161NonCS.html and this is a note on the changes I made on some of the files in each step in order to get it compile. Probably not a comprehensive list since I'm recalling everything below from text message history with friends.
+
+Note the system that I got my local installation is Manjaro Linux.
+
+The most commom error that I got is "multiple definition of" a function. To get rid of the error, find the gcc call that caused this error, then try to find the right place in the Makefile to add the flag "-Wl,--allow-multiple-definition" 
+
+In step 2 (Binutils):
+Error: 
+Multiple definitions
+Fixed:
+./gas/Makefile:192:WARN_CFLAGS = -W -Wall -Wstrict-prototypes -Wmissing-prototypes -Wl,--allow-multiple-definition
+
+In step 4 (gcc):
+Error:
+../.././gcc/toplev.c:524:1: error: redefinition of ‘floor_log2’
+Fix:
+./Makefile:285:CFLAGS = -g -O2 -std=gnu89
+
+In step 5 (gdb):
+Error:
+Related to texinfo
+./elf.texi:11: raising the section level of @subsubsection which is too low
+Fix:
+I think I just found that file and changed "@subsubsection" to "@subsection"
+I think I was also running "env MAKEINFO=missing make" instead of just "make"
+
+Error:
+Multuple definitions
+Fix:
+Add flag, don't know which one worked, I just add the flag everywhere until it works :)
+./gdb/Makefile:134:WARN_CFLAGS = -Wl,--allow-multiple-definition -Wimplicit -Wreturn-type -Wcomment -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith -Wformat-nonliteral -Wunused-label -Wunused-function -Wno-pointer-sign -Wuninitialized
+./gdb/Makefile:1221:    $(CC_LD) $(INTERNAL_LDFLAGS) $(WIN32LDAPP) -Wl,--allow-multiple-definition -std=gnu89 -o gdb$(EXEEXT) gdb.o libgdb.a $(TDEPLIBS) $(TUI_LIBRARY) $(CLIBS) $(LOADLIBES)
+./gdb/Makefile:1225:    $(CC_LD) $(INTERNAL_LDFLAGS) $(WIN32LDAPP) -Wl,--allow-multiple-definition -std=gnu89 \
+./sim/mips/Makefile:69:WARN_CFLAGS = -Wl,--allow-multiple-definition -Wimplicit -Wreturn-type -Wcomment -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith -Wuninitialized
+
+Error:
+textinfo problems,
+./gdb.texinfo:4096: @itemx must follow @item
+./gdb.texinfo:7071: @itemx must follow @item
+./gdb.texinfo:7075: @itemx must follow @item
+Fix:
+Find the line, add or modify what textinfo wants you to do, for example,
+4095 @kindex advance @var{location}
+4096 @item advance @var{location}
+4097 @itemx advance @var{location}
+
+In step 6 (bmake):
+Error:
+Multiple definition when running bootstrap.
+Fix:
+Add flag. In make-bootstrap.sh.in, modify do_link()
+do_link() {
+    output="$1"; shift
+    echo ${CC} ${LDFLAGS} -o "$output" "$@" ${LIBS}
+    ${CC} ${LDFLAGS} -Wl,--allow-multiple-definition -o "$output" "$@" ${LIBS}
+}
+
+That's all I can recall, hope it will be helpful for anyone trying to get the OS locally installed. GOOD LUCK! :)
