@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# https://student.cs.uwaterloo.ca/~cs350/common/Install161.html
+# Step 3: Configure OS/161 and Build the OS/161 Kernel
+# From the cs350-os161 directory, do the following:
+
+if [ $# -ne 1 ]; then
+    echo "Usage: confignbuild X, where X is ASSTX for assignment X" 1>&2
+    exit 2
+fi
+
+ASSTX=ASST$1
+
+(
+cd ~/cs350-os161/os161-1.99
+./configure --ostree=$HOME/cs350-os161/root --toolprefix=cs350-
+cd kern/conf
+./config ASST0
+cd ../compile/ASST0
+bmake depend
+bmake
+bmake install
+)
+
+# For Assignment X, replace ASST0 with ASSTX in the commands above.
+# The bmake install command will create a directory called 
+# $HOME/cs350-os161/root, into which it will place the compiled kernel in a file called kernel-ASST0. 
+# It will also create a symbolic link called kernel referring to kernel-ASST0.
