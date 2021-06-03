@@ -39,15 +39,24 @@ int MAXARTICLESIZE = 10000;
 char * GenerateWord()
 {
     // Create space for word
-    unsigned int length = MINWORDSIZE + rand() % (MAXWORDSIZE-MINWORDSIZE);
-    char * word = ( char * )malloc( ( length + 1 ) * sizeof( char ) );
+//    unsigned int length = MINWORDSIZE + rand() % (MAXWORDSIZE-MINWORDSIZE);
+//    char * word = ( char * )malloc( ( length + 1 ) * sizeof( char ) );
+//
+//    // Fill word with random letters
+//    for ( unsigned int i = 0; i < length; i ++ )
+//    {
+//        unsigned int c = 97 + rand() % 26;
+//        word[i] = (char)c;
+//    }
+//
+//    word[length] = 0;
+//    return word;
 
-    // Fill word with random letters
-    for ( unsigned int i = 0; i < length; i ++ )
-    {
-        unsigned int c = 97 + rand() % 26;
-        word[i] = (char)c;
-    }
+    unsigned int length = 3;
+    char * word = ( char * )malloc( ( length + 1 ) * sizeof( char ) );
+    word[0] = 97;
+    word[1] = 98;
+    word[2] = 99;
 
     word[length] = 0;
     return word;
@@ -129,6 +138,8 @@ int main( int argv, char ** argc )
 
     // Allocate space for the library of articles
     struct Library * lib = GenerateLibrary();
+
+//    printf(GenerateWord());
     
     // Count
     clock_t start;
