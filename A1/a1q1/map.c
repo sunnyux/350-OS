@@ -28,7 +28,8 @@
 char * WORD = "";
 int volatile TOTAL = 0;
 
-int Count( struct  Library * lib) {
+void *Count(void *arg) {
+    struct Library *lib = (struct Library *)arg;
     for ( unsigned int i = 0; i < lib->numArticles; i ++ ) {
         for ( unsigned int j = 0; j < lib->articles[i]->numWords; j++) {
             if(strcmp(WORD, lib->articles[i]->words[j]) == 0) {
@@ -39,17 +40,16 @@ int Count( struct  Library * lib) {
         }
         printf("\n");
     }
-    return 0;
 }
 
-int CountArticles( struct  Article * atl) {
-    for ( unsigned int j = 0; j < atl->numWords; j++) {
-        if(strcmp(WORD, atl->words[j]) == 0) {
+void *CountArticles(void *arguments) {
+    struct Article *args = (struct Article *)arguments;
+    for ( unsigned int j = 0; j < args->numWords; j++) {
+        if(strcmp(WORD, args->words[j]) == 0) {
             TOTAL++;
         }
     }
     printf("\n");
-    return 0;
 }
 
 
@@ -79,9 +79,9 @@ int CountOccurrences( struct  Library * lib, char * word )
 
     pthread_create(&thread1, NULL, Count, lib1);
     pthread_join(thread1, NULL);
-
     pthread_create(&thread2, NULL, Count, lib2);
     pthread_join(thread2, NULL);
+
 
     printf("%i \n", TOTAL);
     return TOTAL;
