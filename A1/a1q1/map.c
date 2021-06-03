@@ -26,30 +26,28 @@
  * --------------------------------------------------------------------
  */
 char * WORD = "";
-int volatile TOTAL = 0;
+int TOTAL = 0;
+int volatile counting = 2;
+pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t t_done = PTHREAD_COND_INITIALIZER;
 
 void *Count(void *arg) {
+    pthread_mutex_lock(&mut);
     struct Library *lib = (struct Library *)arg;
     for ( unsigned int i = 0; i < lib->numArticles; i ++ ) {
         for ( unsigned int j = 0; j < lib->articles[i]->numWords; j++) {
             if(strcmp(WORD, lib->articles[i]->words[j]) == 0) {
                 TOTAL++;
             }
-//            printf("%s", lib->articles[i]->words[j]);
-//            printf(" ")
         }
         printf("\n");
     }
-}
-
-void *CountArticles(void *arguments) {
-    struct Article *args = (struct Article *)arguments;
-    for ( unsigned int j = 0; j < args->numWords; j++) {
-        if(strcmp(WORD, args->words[j]) == 0) {
-            TOTAL++;
-        }
+    counting--;
+    while (counting > 0) {
+        pthread_cond_wait(&t_done, &mut);
     }
-    printf("\n");
+    pthread_cond_signal(&t_done);
+    pthread_mutex_unlock(&mut);
 }
 
 
@@ -74,16 +72,15 @@ int CountOccurrences( struct  Library * lib, char * word )
         lib2->articles[i - numArticles/2] = lib->articles[i];
     }
 
-//    int c = CountArticles(lib->articles[0]);
-//    CountArticles(lib->articles[1]);
-
     pthread_create(&thread1, NULL, Count, lib1);
-    pthread_join(thread1, NULL);
     pthread_create(&thread2, NULL, Count, lib2);
-    pthread_join(thread2, NULL);
 
+    pthread_mutex_lock(&mut);
+    while (counting > 0) {
+        pthread_cond_wait(&t_done, &mut);
+    }
+    pthread_mutex_unlock(&mut);
 
-    printf("%i \n", TOTAL);
     return TOTAL;
 }
 
