@@ -69,25 +69,38 @@ rest(void)
 void
 consume_enter(struct resource *resource)
 {
-    // FILL ME IN
+    pthread_mutex_lock(&resource->mutex);
+    int num_allowed = resource->num_producers * resource->ratio;
+    while(resource->num_consumers > num_allowed) {
+        pthread_cond_wait(&resource->cond, &resource->mutex);
+    }
+    resource->num_consumers += 1;
 }
 
 void
 consume_exit(struct resource *resource)
 {
-    // FILL ME IN
+    resource->num_consumers -= 1;
+    pthread_mutex_unlock(&resource->mutex);
 }
 
 void
 produce_enter(struct resource *resource)
 {
-    // FILL ME IN
+    pthread_mutex_lock(&resource->mutex);
+    resource->num_producers += 1;
+    pthread_mutex_unlock(&resource->mutex);
 }
 
 void
 produce_exit(struct resource *resource)
 {
-    // FILL ME IN
+    pthread_mutex_lock(&resource->mutex);
+    int num_allowed = resource->num_producers * resource->ratio;
+    while(resource->num_consumers > num_allowed) {
+        pthread_cond_wait(&resource->cond, &resource->mutex);
+    }
+    resource->num_producers -= 1;
 }
 
 /* Functions for the consumers and producers. */
@@ -112,9 +125,11 @@ consume(void *data)
 		pthread_mutex_unlock(&resource->mutex);
 		compute();
 
+//        pthread_mutex_lock(&resource->mutex);
         int num_allowed = resource->num_producers * resource->ratio;
         if ( resource->num_consumers > num_allowed )
             printf( "Fail.  Incorrect ratio. %d %ld\n", num_allowed, resource->num_consumers );
+//        pthread_mutex_unlock(&resource->mutex);
 
 		pthread_mutex_lock(&resource->mutex);
 
