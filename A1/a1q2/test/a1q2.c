@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,8 +9,8 @@
 #include <unistd.h>
 
 /*
- * Note: Error handling is deliberatly gratuitous; we are a short lived 
- * userspace utility, and we exit on every error, so we will be properly cleaned 
+ * Note: Error handling is deliberatly gratuitous; we are a short lived
+ * userspace utility, and we exit on every error, so we will be properly cleaned
  * up anyway. Providing a good example of clean C is worth the extra effort,
  * though.
  */
@@ -17,8 +18,31 @@
 pthread_mutex_t done_mutex= PTHREAD_MUTEX_INITIALIZER;
 bool done = false;
 
+void
+sigterm_handler(int sig)
+{
+    int *ret;
 
+    ret = malloc(sizeof(*ret));
+    *ret = 0;
 
+    pthread_exit(ret);
+}
+
+void
+sigterm_pthread_exit_register(void)
+{
+    struct sigaction sa;
+    int error;
+
+    /* Register a signal handler for SIGUSR1 to gracefully call thread_exit(). */
+
+    sa.sa_handler = sigterm_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    error = sigaction(SIGUSR1, &sa, NULL);
+    assert(error == 0);
+}
 
 bool
 check_done(void)
@@ -47,7 +71,6 @@ struct resource {
     int ratio;			/* Ratio of producers to consumers */
     pthread_cond_t cond;		/* Resource condition variable */
     pthread_mutex_t mutex;		/* Resource mutex */
-    pthread_cond_t cond_produce_exit; //cond variable for producer exit
 };
 
 void
@@ -119,6 +142,8 @@ consume(void *data)
     struct resource *resource = (struct resource *) data;
     int *ret;
 
+    sigterm_pthread_exit_register();
+
     ret = malloc(sizeof(*ret));
     if (ret == NULL) {
         perror("malloc");
@@ -133,12 +158,6 @@ consume(void *data)
         /* Computation happens outside the critical section.*/
         pthread_mutex_unlock(&resource->mutex);
         compute();
-
-        pthread_mutex_lock(&resource->mutex);
-        int num_allowed = resource->num_producers * resource->ratio;
-        if ( resource->num_consumers > num_allowed )
-            printf( "Fail.  Incorrect ratio. %d %ld\n", num_allowed, resource->num_consumers );
-        pthread_mutex_unlock(&resource->mutex);
 
         pthread_mutex_lock(&resource->mutex);
 
@@ -157,6 +176,8 @@ produce(void *data)
 {
     struct resource *resource = (struct resource *) data;
     int *ret;
+
+    sigterm_pthread_exit_register();
 
     ret = malloc(sizeof(*ret));
     if (ret == NULL) {
@@ -232,9 +253,6 @@ resource_setup(long num_consumers, long num_producers, long ratio)
 void
 resource_teardown(struct resource *resource)
 {
-    assert(resource->num_consumers == 0);
-    assert(resource->num_producers == 0);
-
     pthread_cond_destroy(&resource->cond);
     pthread_mutex_destroy(&resource->mutex);
 
@@ -248,6 +266,8 @@ thread_teardown(pthread_t *threads, struct resource *resource, int nthreads)
     int i;
 
     for (i = 0; i < nthreads; i++) {
+        /* Stop all threads, even if they are */
+        pthread_kill(threads[i], SIGUSR1);
         pthread_join(threads[i], (void *)&ret);
         assert(ret != NULL);
         assert(*ret == 0);
@@ -331,7 +351,8 @@ main(int argc, char **argv)
         resource_teardown(resource);
         exit(0);
     }
-    sleep(10);
+
+    sleep(3);
 
     /* Mark operation as done. */
     set_done(true);
