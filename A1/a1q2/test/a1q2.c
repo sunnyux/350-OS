@@ -17,6 +17,9 @@
 pthread_mutex_t done_mutex= PTHREAD_MUTEX_INITIALIZER;
 bool done = false;
 
+
+
+
 bool
 check_done(void)
 {
@@ -32,9 +35,7 @@ check_done(void)
 void
 set_done(bool val)
 {
-    printf("set done beginning");
     pthread_mutex_lock(&done_mutex);
-    printf("set done got done_mutex");
     done = val;
     pthread_mutex_unlock(&done_mutex);
 }
@@ -46,12 +47,12 @@ struct resource {
     int ratio;			/* Ratio of producers to consumers */
     pthread_cond_t cond;		/* Resource condition variable */
     pthread_mutex_t mutex;		/* Resource mutex */
+    pthread_cond_t cond_produce_exit; //cond variable for producer exit
 };
 
 void
 assert_capacity(struct resource *resource)
 {
-    printf("consumers: %li, producers: %li\n", resource->num_consumers, resource->num_producers);
     assert(resource->num_consumers <= resource->num_producers * resource->ratio);
 }
 
@@ -73,50 +74,42 @@ void
 consume_enter(struct resource *resource)
 {
     pthread_mutex_lock(&resource->mutex);
-    printf("consumer enter, %li\n", resource->num_consumers);
-    int num_allowed = resource->num_producers * resource->ratio;
-    printf("num_allowed, %i\n", num_allowed);
-    while (resource->num_consumers >= num_allowed) {
+    while (resource->num_consumers >= resource->ratio * resource->num_producers) {
         pthread_cond_wait(&resource->cond, &resource->mutex);
     }
-    if (resource->num_consumers <= num_allowed)
-        resource->num_consumers += 1;
-    printf("consumer enter, %li\n", resource->num_consumers);
+    resource->num_consumers++;
+    printf("consume_enter: %li, %li \n", resource->num_consumers, resource->num_producers);
 }
 
 void
 consume_exit(struct resource *resource)
 {
-    resource->num_consumers -= 1;
-    printf("consumer exit, %li\n", resource->num_consumers);
-    int num_allowed = resource->num_producers * resource->ratio;
-    if (resource->num_consumers <= num_allowed)
-        pthread_cond_signal(&resource->cond);
-    printf("consumer exit, %li\n", resource->num_consumers);
+    resource->num_consumers--;
+    pthread_cond_signal(&resource->cond);
     pthread_mutex_unlock(&resource->mutex);
+    printf("consume_exit: %li, %li \n", resource->num_consumers, resource->num_producers);
 }
 
 void
 produce_enter(struct resource *resource)
 {
     pthread_mutex_lock(&resource->mutex);
-    printf("producer enter, %li\n", resource->num_producers);
-    resource->num_producers += 1;
-    printf("producer enter, %li\n", resource->num_producers);
+    resource->num_producers++;
+    for (int i = 0; i < resource->ratio; i++) {
+        pthread_cond_signal(&resource->cond);
+    }
+    printf("produce_enter: %li, %li \n", resource->num_consumers, resource->num_producers);
 }
 
 void
 produce_exit(struct resource *resource)
 {
-    printf("consumer exit, %li\n", resource->num_producers);
-    int num_allowed = resource->num_producers * resource->ratio;
-    while(resource->num_consumers >= num_allowed) {
+    while(resource->num_consumers > resource->ratio * (resource->num_producers - 1)) {
         pthread_cond_wait(&resource->cond, &resource->mutex);
     }
-    resource->num_producers -= 1;
-    printf("consumer exit, %li\n", resource->num_producers);
-    if (resource->num_consumers <= num_allowed)
-        pthread_cond_signal(&resource->cond);
+    resource->num_producers--;
+    pthread_mutex_unlock(&resource->mutex);
+    printf("produce_exit: %li, %li \n", resource->num_consumers, resource->num_producers);
 }
 
 /* Functions for the consumers and producers. */
@@ -134,7 +127,6 @@ consume(void *data)
 
     while (!check_done()) {
         consume_enter(resource);
-        printf("consume_enter ends\n");
 
         assert_capacity(resource);
 
@@ -252,7 +244,6 @@ resource_teardown(struct resource *resource)
 void
 thread_teardown(pthread_t *threads, struct resource *resource, int nthreads)
 {
-    printf("in teardown");
     int *ret;
     int i;
 
@@ -264,7 +255,6 @@ thread_teardown(pthread_t *threads, struct resource *resource, int nthreads)
     }
 
     free(threads);
-    printf("done teardown");
 }
 
 int
@@ -341,14 +331,10 @@ main(int argc, char **argv)
         resource_teardown(resource);
         exit(0);
     }
-    printf("before sleep\n");
     sleep(10);
-    printf("after sleep\n");
 
     /* Mark operation as done. */
     set_done(true);
-
-    printf("set done");
 
     /* Free the resources. */
     thread_teardown(threads, resource, num_producers + num_consumers);
