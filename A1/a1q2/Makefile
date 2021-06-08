@@ -1,12 +1,17 @@
-.PHONY: all clean
+OBJS	= a1q2.o
+SOURCE	= a1q2.c
+HEADER	= 
+OUT	= a1q2
+CC	 = gcc
+FLAGS	 = -g -c -Wall
+LFLAGS	 = -lpthread
 
-CC=clang
-CFLAGS+=-Wall -Werror -lpthread -DSOLUTION
+all: $(OBJS)
+	$(CC) -g $(OBJS) -o $(OUT) $(LFLAGS)
 
-all: a1q2 
+a1q2.o: a1q2.c
+	$(CC) $(FLAGS) a1q2.c 
 
-a1q2: a1q2.c
-	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
-	rm -f *.o a1q2
+	rm -f $(OBJS) $(OUT)
