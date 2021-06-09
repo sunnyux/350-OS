@@ -1,7 +1,7 @@
 OBJS	= a1q2.o
 SOURCE	= a1q2.c
 HEADER	= 
-OUT	= a1q2
+OUT	= a1q2_print
 CC	 = gcc
 FLAGS	 = -g -c -Wall
 LFLAGS	 = -lpthread

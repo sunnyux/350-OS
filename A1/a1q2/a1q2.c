@@ -74,12 +74,14 @@ consume_enter(struct resource *resource)
         pthread_cond_wait(&resource->cond, &resource->mutex);
     }
     resource->num_consumers += 1;
+    // printf("consume_enter: %li, %li \n", resource->num_consumers, resource->num_producers);
 }
 
 void
 consume_exit(struct resource *resource)
 {
     resource->num_consumers -= 1;
+    // printf("consume_exit: %li, %li \n", resource->num_consumers, resource->num_producers);
     pthread_cond_signal(&resource->cond);
     pthread_mutex_unlock(&resource->mutex);
 }
@@ -89,6 +91,7 @@ produce_enter(struct resource *resource)
 {
     pthread_mutex_lock(&resource->mutex);
     resource->num_producers += 1;
+    // printf("produce_enter: %li, %li \n", resource->num_consumers, resource->num_producers);
     for (int i = 0; i < resource->ratio; i++) {
         pthread_cond_signal(&resource->cond);
     }
@@ -101,6 +104,7 @@ produce_exit(struct resource *resource)
         pthread_cond_wait(&resource->cond, &resource->mutex);
     }
     resource->num_producers -= 1;
+    // printf("produce_exit: %li, %li \n", resource->num_consumers, resource->num_producers);
     pthread_mutex_unlock(&resource->mutex);
 }
 
