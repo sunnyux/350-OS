@@ -11,7 +11,7 @@ for r in range(174, 200):
 	# c = random.choice(letters) + random.choice(letters)
 	for c in letters:
 		threaded = subprocess.run(['./a1q1', str(r), c], capture_output=True, text=True).stdout
-		none_threaded = subprocess.run(['./a1q1_not_threaded', str(r), c], capture_output=True, text=True).stdout
+		none_threaded = subprocess.run(['./a1q1_non_threaded', str(r), c], capture_output=True, text=True).stdout
 		t = threaded.splitlines()[0]
 		n = none_threaded.splitlines()[0]
 		if t != n:
