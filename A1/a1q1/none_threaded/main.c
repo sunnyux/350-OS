@@ -51,6 +51,15 @@ char * GenerateWord()
 
     word[length] = 0;
     return word;
+
+    // unsigned int length = 3;
+    // char * word = ( char * )malloc( ( length + 1 ) * sizeof( char ) );
+    // word[0] = 97;
+    // word[1] = 98;
+    // word[2] = 99;
+
+    // word[length] = 0;
+    // return word;
 }
 
 struct Article * GenerateArticle()

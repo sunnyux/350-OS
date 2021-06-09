@@ -1,7 +1,7 @@
-OBJS	= a1q2.o
-SOURCE	= a1q2.c
+OBJS	= main.o map.o
+SOURCE	= main.c map.c
 HEADER	= 
-OUT	= a1q2
+OUT	= a1q1_non_threaded
 CC	 = gcc
 FLAGS	 = -g -c -Wall
 LFLAGS	 = -lpthread
@@ -9,8 +9,11 @@ LFLAGS	 = -lpthread
 all: $(OBJS)
 	$(CC) -g $(OBJS) -o $(OUT) $(LFLAGS)
 
-a1q2.o: a1q2.c
-	$(CC) $(FLAGS) a1q2.c 
+main.o: main.c
+	$(CC) $(FLAGS) main.c 
+
+map.o: map.c
+	$(CC) $(FLAGS) map.c 
 
 
 clean:

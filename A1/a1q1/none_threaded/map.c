@@ -28,11 +28,9 @@
 char * WORD = "";
 int TOTAL = 0;
 int volatile counting = 2;
-pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t t_done = PTHREAD_COND_INITIALIZER;
+
 
 void *Count(void *arg) {
-    pthread_mutex_lock(&mut);
     struct Library *lib = (struct Library *)arg;
     for ( unsigned int i = 0; i < lib->numArticles; i ++ ) {
         for ( unsigned int j = 0; j < lib->articles[i]->numWords; j++) {
@@ -41,18 +39,11 @@ void *Count(void *arg) {
             }
         }
     }
-    counting--;
-    while (counting > 0) {
-        pthread_cond_wait(&t_done, &mut);
-    }
-    pthread_cond_signal(&t_done);
-    pthread_mutex_unlock(&mut);
 }
 
 
 int CountOccurrences( struct  Library * lib, char * word )
 {
-    pthread_t thread1, thread2;
     WORD = word;
     unsigned int numArticles = lib->numArticles;
 
@@ -71,14 +62,8 @@ int CountOccurrences( struct  Library * lib, char * word )
         lib2->articles[i - numArticles/2] = lib->articles[i];
     }
 
-    pthread_create(&thread1, NULL, Count, lib1);
-    pthread_create(&thread2, NULL, Count, lib2);
-
-    pthread_mutex_lock(&mut);
-    while (counting > 0) {
-        pthread_cond_wait(&t_done, &mut);
-    }
-    pthread_mutex_unlock(&mut);
+    Count((void *) lib1);
+    Count((void *) lib2);
 
     return TOTAL;
 }
