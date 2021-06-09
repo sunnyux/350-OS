@@ -45,25 +45,8 @@ void *Count(void *arg) {
 int CountOccurrences( struct  Library * lib, char * word )
 {
     WORD = word;
-    unsigned int numArticles = lib->numArticles;
 
-    struct Library * lib1 = ( struct Library * )malloc( sizeof( struct Library ) );
-    struct Library * lib2 = ( struct Library * )malloc( sizeof( struct Library ) );
-    lib1->articles = ( struct Article ** )malloc( numArticles/2 * sizeof( struct Article * ) );
-    lib2->articles = ( struct Article ** )malloc( numArticles/2 * sizeof( struct Article * ) );
-    lib1->numArticles = numArticles/2;
-    lib2->numArticles = numArticles/2;
-
-    for ( unsigned int i = 0; i < numArticles/2; i++ ) {
-        lib1->articles[i] = lib->articles[i];
-    }
-
-    for ( unsigned int i = numArticles/2; i < numArticles; i++ ) {
-        lib2->articles[i - numArticles/2] = lib->articles[i];
-    }
-
-    Count((void *) lib1);
-    Count((void *) lib2);
+    Count((void *) lib);
 
     return TOTAL;
 }

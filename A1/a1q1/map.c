@@ -13,7 +13,7 @@
  */
 #include "data.h"
 #include <stdlib.h>
-
+#include <math.h>
 /* --------------------------------------------------------------------
  * CountOccurrences
  * --------------------------------------------------------------------
@@ -55,30 +55,50 @@ int CountOccurrences( struct  Library * lib, char * word )
     pthread_t thread1, thread2;
     WORD = word;
     unsigned int numArticles = lib->numArticles;
+    printf("aaaaadsfasdf");
+    unsigned int half = numArticles/2;
+    unsigned int half1 = numArticles - numArticles/2;
+    printf("half: %i", half);
 
     struct Library * lib1 = ( struct Library * )malloc( sizeof( struct Library ) );
     struct Library * lib2 = ( struct Library * )malloc( sizeof( struct Library ) );
-    lib1->articles = ( struct Article ** )malloc( numArticles/2 * sizeof( struct Article * ) );
-    lib2->articles = ( struct Article ** )malloc( numArticles/2 * sizeof( struct Article * ) );
-    lib1->numArticles = numArticles/2;
-    lib2->numArticles = numArticles/2;
-
-    for ( unsigned int i = 0; i < numArticles/2; i++ ) {
-        lib1->articles[i] = lib->articles[i];
+    lib1->articles = ( struct Article ** )malloc( half * sizeof( struct Article * ) );
+    lib2->articles = ( struct Article ** )malloc( half1 * sizeof( struct Article * ) );
+    for ( unsigned int i = 0; i < half; i ++ ) {
+        lib1->articles[i] = GenerateArticle();
+    }
+    for ( unsigned int i = 0; i < half1; i ++ ) {
+        lib1->articles[i] = GenerateArticle();
+    }
+    lib1->numArticles = half;
+    lib2->numArticles = half1;
+    
+    for ( unsigned int i = 0; i < half; i++ ) {
+        unsigned int numWords = lib->articles[i]->numWords;
+        lib1->articles[i]->numWords = numWords;
+        char ** words = (char **)malloc( numWords * sizeof( char * ));
+        for ( unsigned int j = 0; j < numWords; j++ ) {
+            words[i] = lib->articles[i]->words;
+        }
     }
 
-    for ( unsigned int i = numArticles/2; i < numArticles; i++ ) {
-        lib2->articles[i - numArticles/2] = lib->articles[i];
+    for ( unsigned int i = 0; i < half1; i++ ) {
+        unsigned int numWords = lib->articles[i + half1 + 1]->numWords;
+        lib2->articles[i]->numWords = numWords;
+        char ** words = (char **)malloc( numWords * sizeof( char * ));
+        for ( unsigned int j = 0; j < numWords; j++ ) {
+            words[i] = lib->articles[i]->words;
+        }
     }
 
-    pthread_create(&thread1, NULL, Count, lib1);
-    pthread_create(&thread2, NULL, Count, lib2);
+    // pthread_create(&thread1, NULL, Count, lib1);
+    // pthread_create(&thread2, NULL, Count, lib2);
 
-    pthread_mutex_lock(&mut);
-    while (counting > 0) {
-        pthread_cond_wait(&t_done, &mut);
-    }
-    pthread_mutex_unlock(&mut);
+    // pthread_mutex_lock(&mut);
+    // while (counting > 0) {
+    //     pthread_cond_wait(&t_done, &mut);
+    // }
+    // pthread_mutex_unlock(&mut);
 
     return TOTAL;
 }
