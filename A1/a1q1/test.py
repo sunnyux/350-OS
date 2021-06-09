@@ -4,7 +4,7 @@ import sys
 import string
 
 # letters = string.ascii_lowercase + string.ascii_uppercase
-letters = list(string.ascii_lowercase + string.ascii_uppercase)
+letters = list(string.ascii_lowercase)
 
 
 for r in range(174, 200):
