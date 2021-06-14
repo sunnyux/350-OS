@@ -130,8 +130,8 @@ consume(void *data)
         compute();
         pthread_mutex_lock(&resource->mutex);
 
+        assert_capacity(resource);  // follow-up from pizaa @207
         consume_exit(resource);
-        assert_capacity(resource);
 
         /* Wait for a bit. */
         rest();
@@ -162,8 +162,8 @@ produce(void *data)
         compute();
         pthread_mutex_lock(&resource->mutex);
 
+        assert_capacity(resource);  // follow-up from pizaa @207
         produce_exit(resource);
-        assert_capacity(resource);
 
         /* Wait for a bit. */
         rest();
