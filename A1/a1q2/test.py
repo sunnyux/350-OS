@@ -4,9 +4,9 @@ import sys
 
 
 
-for c in range(6, 20):
-	for p in range(10):
-		for r in range(20):
+for c in range(100, 150):
+	for p in range(10, 20):
+		for r in range(10):
 			if c <= p * r and c > 0 and p > 0 and r > 0:
 				stderr = subprocess.run(['./a1q2', str(c), str(p), str(r)], capture_output=True, text=True).stderr
 				if "failed" in stderr:
