@@ -45,6 +45,7 @@ void *Count(void *arg) {
     }
     pthread_cond_signal(&t_done);
     pthread_mutex_unlock(&mut);
+    return NULL;
 }
 
 

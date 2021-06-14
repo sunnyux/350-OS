@@ -45,21 +45,12 @@ char * GenerateWord()
     // Fill word with random letters
     for ( unsigned int i = 0; i < length; i ++ )
     {
-       unsigned int c = 97 + rand() % 26;
-       word[i] = (char)c;
+        unsigned int c = 97 + rand() % 26;
+        word[i] = (char)c;
     }
 
     word[length] = 0;
     return word;
-
-    // unsigned int length = 3;
-    // char * word = ( char * )malloc( ( length + 1 ) * sizeof( char ) );
-    // word[0] = 97;
-    // word[1] = 98;
-    // word[2] = 99;
-
-    // word[length] = 0;
-    // return word;
 }
 
 struct Article * GenerateArticle()
@@ -138,8 +129,6 @@ int main( int argv, char ** argc )
 
     // Allocate space for the library of articles
     struct Library * lib = GenerateLibrary();
-
-//    printf(GenerateWord());
     
     // Count
     clock_t start;
@@ -147,8 +136,7 @@ int main( int argv, char ** argc )
 
     start = clock();
     int count = CountOccurrences( lib, argc[2] );
-    printf("%i\n", count);
-//    printf( "There are %d occurrences of %s\n", count, argc[2] );
+    printf( "There are %d occurrences of %s\n", count, argc[2] );
 
     stop = clock();
     double time = (double)(stop - start)/ (double)CLOCKS_PER_SEC;

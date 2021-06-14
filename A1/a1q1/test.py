@@ -8,7 +8,6 @@ letters = list(string.ascii_lowercase)
 
 
 for r in range(2, 200):
-	# c = random.choice(letters) + random.choice(letters)
 	for c in letters:
 		threaded = subprocess.run(['./a1q1', str(r), c], capture_output=True, text=True).stdout
 		none_threaded = subprocess.run(['./a1q1_non_threaded', str(r), c], capture_output=True, text=True).stdout

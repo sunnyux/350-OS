@@ -25,29 +25,17 @@
  * 2 occurences of the word "the".
  * --------------------------------------------------------------------
  */
-char * WORD = "";
 int TOTAL = 0;
-int volatile counting = 2;
-
-
-void *Count(void *arg) {
-    struct Library *lib = (struct Library *)arg;
-    for ( unsigned int i = 0; i < lib->numArticles; i ++ ) {
-        for ( unsigned int j = 0; j < lib->articles[i]->numWords; j++) {
-            if(strcmp(WORD, lib->articles[i]->words[j]) == 0) {
-                TOTAL++;
-            }
-        }
-    }
-}
-
 
 int CountOccurrences( struct  Library * lib, char * word )
 {
-    WORD = word;
-
-    Count((void *) lib);
-
+    for ( unsigned int i = 0; i < lib->numArticles; i ++ ) {
+        for ( unsigned int j = 0; j < lib->articles[i]->numWords; j++) {
+            if(strcmp(word, lib->articles[i]->words[j]) == 0) {
+                TOTAL++;
+            }
+        }
+    }   
     return TOTAL;
 }
 
