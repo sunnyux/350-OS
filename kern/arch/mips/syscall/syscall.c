@@ -180,4 +180,5 @@ void
 enter_forked_process(struct trapframe *tf)
 {
 	(void)tf;
+	// want to call mips usermode() (from locore/trap.c) to actually cause the switch from kernel mode to user mode
 }
