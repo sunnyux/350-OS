@@ -10,6 +10,10 @@
 #include <addrspace.h>
 #include <copyinout.h>
 
+#include <mips/trapframe.h>
+
+#include "opt-A2.h"
+
   /* this implementation of sys__exit does not do anything with the exit code */
   /* this needs to be fixed to get exit() and waitpid() working properly */
 
@@ -53,10 +57,18 @@ void sys__exit(int exitcode) {
 int
 sys_getpid(pid_t *retval)
 {
+// #if OPT_A2
+  spinlock_acquire(&curproc->p_lock);
+  *retval = curproc->p_pid;
+  spinlock_release(&curproc->p_lock);
+  return(0);
+
+// #else
   /* for now, this is just a stub that always returns a PID of 1 */
   /* you need to fix this to make it work properly */
   *retval = 1;
   return(0);
+// #endif
 }
 
 /* stub handler for waitpid() system call                */
@@ -92,3 +104,71 @@ sys_waitpid(pid_t pid,
   return(0);
 }
 
+
+// #if OPT_A2
+
+int
+sys_fork(struct trapframe* tf, 
+         pid_t* retval)
+{
+  int err;
+  struct proc *parent = curproc;
+  struct proc *child;
+  struct addrspace *as;
+
+  // create process structure for child process
+  child = proc_create_runprogram(parent->p_name);
+  if (child == NULL) {
+    return ENOMEM;
+  }
+
+  // create and copy the address space
+  as = NULL;
+  spinlock_acquire(&parent->p_lock);
+  err = as_copy(parent->p_addrspace, &as);
+  spinlock_release(&parent->p_lock);
+  
+  if (err != 0) {
+    proc_destroy(child);
+    return err;
+  }
+
+  spinlock_acquire(&child->p_lock);
+  child->p_addrspace = as;
+  spinlock_release(&child->p_lock);
+
+  // create parent/child relationship
+  spinlock_acquire(&parent->p_lock);
+  child->p_parent = parent;
+  err = array_add(child->p_children, (void *) child, NULL);
+  spinlock_release(&child->p_lock);
+
+  if (err != 0) {
+    proc_destroy(child);
+    return err;
+  }
+
+  // create a thread for the child process
+  struct trapframe *tf_p = kmalloc(sizeof(struct trapframe));
+  if (tf_p == NULL || tf == NULL) {
+    proc_destroy(child);
+    return ENOMEM;
+  }
+
+  spinlock_acquire(&parent->p_lock);
+  memcpy(tf_p, tf, sizeof(struct trapframe));
+  spinlock_release(&parent->p_lock);
+
+  err = thread_fork(child->p_name, child, enter_forked_process, (void *)tf_p, 0);
+  if (err != 0) {
+    proc_destroy(child);
+    return err;
+  }
+
+  // return
+  *retval = child->p_pid;
+  return 0;
+
+}
+
+// #endif

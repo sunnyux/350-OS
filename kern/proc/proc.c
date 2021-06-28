@@ -69,6 +69,9 @@ static struct semaphore *proc_count_mutex;
 struct semaphore *no_proc_sem;   
 #endif  // UW
 
+// #if OPT_A2
+static volatile unsigned int pid_counter;
+// #endif
 
 
 /*
@@ -103,6 +106,16 @@ proc_create(const char *name)
 	proc->console = NULL;
 #endif // UW
 
+// #if OPT_A2
+	proc->p_parent = NULL;
+	proc->p_children = array_create();
+	if(proc->p_children == NULL) {
+		kfree(proc->p_name);
+		kfree(proc);
+		return NULL;
+	}
+
+// #endif // OPT_A2
 	return proc;
 }
 
@@ -183,6 +196,10 @@ proc_destroy(struct proc *proc)
 	}
 	V(proc_count_mutex);
 #endif // UW
+
+// if OPT_A2
+
+// #endif
 	
 
 }
@@ -208,6 +225,10 @@ proc_bootstrap(void)
     panic("could not create no_proc_sem semaphore\n");
   }
 #endif // UW 
+
+// #if OPT_A2
+  pid_counter = 1;	// PID > 0
+// #endif
 }
 
 /*
@@ -270,6 +291,14 @@ proc_create_runprogram(const char *name)
 	proc_count++;
 	V(proc_count_mutex);
 #endif // UW
+
+// #if OPT_A2
+	/* assign PID to child process and increment the count of pid */
+	P(proc_count_mutex); 
+	proc->p_pid = pid_counter;
+	pid_counter++;
+	V(proc_count_mutex);
+// #endif
 
 	return proc;
 }

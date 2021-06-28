@@ -36,6 +36,7 @@
 #include <current.h>
 #include <syscall.h>
 
+#include "opt-A2.h"
 
 /*
  * System call dispatcher.
@@ -131,7 +132,11 @@ syscall(struct trapframe *tf)
 	  break;
 #endif // UW
 
-	    /* Add stuff here */
+// #if OPT_A2
+	case SYS_fork:
+	  err = sys_fork(tf, (pid_t *)&retval);
+	  break;
+//#endif
  
 	default:
 	  kprintf("Unknown syscall %d\n", callno);
@@ -177,8 +182,15 @@ syscall(struct trapframe *tf)
  * Thus, you can trash it and do things another way if you prefer.
  */
 void
-enter_forked_process(struct trapframe *tf)
+enter_forked_process(void* tf_p, unsigned long ret)
 {
-	(void)tf;
+	struct trapframe tf_c = * (struct trapframe *) tf_p;
+	kfree(tf_p);
+	tf_c.tf_v0 = 0;
+	tf_c.tf_a3 = 0;
+	tf_c.tf_epc += 4;
+	mips_usermode(&tf_c);
+	(void)ret;
+
 	// want to call mips usermode() (from locore/trap.c) to actually cause the switch from kernel mode to user mode
 }

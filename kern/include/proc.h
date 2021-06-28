@@ -38,6 +38,7 @@
 
 #include <spinlock.h>
 #include <thread.h> /* required for struct threadarray */
+#include "opt-A2.h"
 
 struct addrspace;
 struct vnode;
@@ -47,6 +48,9 @@ struct semaphore;
 
 /*
  * Process structure.
+ * p_lock is intended to be held when manipulating the pointers in the
+ * proc structure, not while doing any significant work with the
+ * things they point to.
  */
 struct proc {
 	char *p_name;			/* Name of this process */
@@ -58,6 +62,12 @@ struct proc {
 
 	/* VFS */
 	struct vnode *p_cwd;		/* current working directory */
+
+// #if OPT_A2
+	pid_t p_pid;
+	struct proc *p_parent;
+	struct array *p_children;
+// #endif
 
 #ifdef UW
   /* a vnode to refer to the console device */
