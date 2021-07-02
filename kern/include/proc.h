@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2013
- *	The President and Fellows of Harvard College.
+ *  The President and Fellows of Harvard College.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -53,24 +53,24 @@ struct semaphore;
  * things they point to.
  */
 struct proc {
-	char *p_name;			/* Name of this process */
-	struct spinlock p_lock;		/* Lock for this structure */
-	struct threadarray p_threads;	/* Threads in this process */
+    char *p_name;           /* Name of this process */
+    struct spinlock p_lock;     /* Lock for this structure */
+    struct threadarray p_threads;   /* Threads in this process */
 
-	/* VM */
-	struct addrspace *p_addrspace;	/* virtual address space */
+    /* VM */
+    struct addrspace *p_addrspace;  /* virtual address space */
 
-	/* VFS */
-	struct vnode *p_cwd;		/* current working directory */
+    /* VFS */
+    struct vnode *p_cwd;        /* current working directory */
 
 // #if OPT_A2
-	int p_alive;	// 0 = dead, 1 = alive, 2 = zombie
-	int p_exit_code;
-	pid_t p_pid;
-	struct proc *p_parent;
-	struct array *p_children;
-	struct lock* p_lk;
-	struct cv* p_cv;
+    bool p_alive;
+    int p_exit_code;
+    pid_t p_pid;
+    struct proc *p_parent;
+    struct array *p_children;
+    struct lock* p_lk;
+    struct cv* p_cv;
 // #endif
 
 #ifdef UW
@@ -82,7 +82,7 @@ struct proc {
   struct vnode *console;                /* a vnode for the console device */
 #endif
 
-	/* add more material here as needed */
+    /* add more material here as needed */
 };
 
 /* This is the process structure for the kernel and for kernel-only threads. */
@@ -116,3 +116,7 @@ struct addrspace *curproc_setas(struct addrspace *);
 
 
 #endif /* _PROC_H_ */
+
+#if OPT_A2
+bool check_p_alive(struct proc* proc);
+#endif

@@ -47,18 +47,16 @@ void sys__exit(int exitcode) {
   proc_remthread(curthread);
 
 #if OPT_A2
-  // lock_acquire(p->p_lk);
   // If parent has already exited or if already called waitpid (autopsy done)
-  if (p->p_parent == NULL || p->p_parent == 0) {
+  if (p->p_parent == NULL || !check_p_alive(p->p_parent)) {
     // children should delete themselves since they won't have a parent, 
     // zombies only when parent alive
-    // lock_release(p->p_lk);
     proc_destroy(p); 
   } else {
     lock_acquire(p->p_lk);
-    p->p_alive = 0;
+    p->p_alive = false;
     p->p_exit_code = exitcode;
-    cv_signal(p->p_cv, p->p_lk);
+    cv_signal(p->p_cv, p->p_parent->p_lk);
     lock_release(p->p_lk);
   }
 #else
@@ -95,9 +93,9 @@ sys_getpid(pid_t *retval)
 
 int
 sys_waitpid(pid_t pid,
-	    userptr_t status,
-	    int options,
-	    pid_t *retval)
+        userptr_t status,
+        int options,
+        pid_t *retval)
 {
   int exitstatus;
   int result;
@@ -106,32 +104,29 @@ sys_waitpid(pid_t pid,
     return(EINVAL);
   }
 
-// #if OPT_A2
-//   // Validate tht the given pid is from children
-//   bool is_child = false;
-//   struct proc *parent = curproc;
-//   lock_acquire(parent->p_lk);
-//   for (unsigned int i = 0; i < array_num(parent->p_children); i++) {
-//     struct proc *child = array_get(parent->p_children, i);
-//     if (child->p_pid == pid) {
-//       is_child = true;
-//       // lock_acquire(child->p_lk);
-//       while(child->p_alive == 1) {
-//         // cv_wait(child->p_cv, child->p_lk);
-//         cv_wait(child->p_cv, parent->p_lk); //
-//       }
-//       exitstatus = _MKWAIT_EXIT(child->p_exit_code);
-//       // lock_release(child->p_lk);
-//       break;
-//     }
-//   }
-//   lock_release(parent->p_lk);
-//   if (!is_child) {
-//     *retval = -1;
-//     return ESRCH;
-//   }
+#if OPT_A2
+  // Validate tht the given pid is from children
+  bool is_child = false;
+  struct proc *parent = curproc;
+  lock_acquire(parent->p_lk);
+  for (unsigned int i = 0; i < array_num(parent->p_children); i++) {
+    struct proc *child = array_get(parent->p_children, i);
+    if (child->p_pid == pid) {
+      is_child = true;
+      while(check_p_alive(child)) {
+        cv_wait(child->p_cv, parent->p_lk); //
+      }
+      exitstatus = _MKWAIT_EXIT(child->p_exit_code);
+      break;
+    }
+  }
+  lock_release(parent->p_lk);
+  if (!is_child) {
+    *retval = -1;
+    return ESRCH;
+  }
 
-// #else
+#else
   /* this is just a stub implementation that always reports an
      exit status of 0, regardless of the actual exit status of
      the specified process.   
@@ -144,7 +139,7 @@ sys_waitpid(pid_t pid,
   /* for now, just pretend the exitstatus is 0 */
   exitstatus = 0;
 
-// #endif
+#endif
   result = copyout((void *)&exitstatus,status,sizeof(int));
   if (result) {
     return(result);
@@ -163,7 +158,6 @@ sys_fork(struct trapframe* tf,
   int err;
   struct proc *parent = curproc;
   struct proc *child;
-  struct addrspace *as;
 
   // create process structure for child process
   child = proc_create_runprogram(parent->p_name);
@@ -172,9 +166,8 @@ sys_fork(struct trapframe* tf,
   }
 
   // create and copy the address space
-  as = NULL;
   spinlock_acquire(&parent->p_lock);
-  err = as_copy(parent->p_addrspace, &as);
+  err = as_copy(parent->p_addrspace, &child->p_addrspace);
   spinlock_release(&parent->p_lock);
   
   if (err != 0) {
@@ -182,14 +175,10 @@ sys_fork(struct trapframe* tf,
     return err;
   }
 
-  spinlock_acquire(&child->p_lock);
-  child->p_addrspace = as;
-  spinlock_release(&child->p_lock);
-
   // create parent/child relationship
   spinlock_acquire(&parent->p_lock);
   child->p_parent = parent;
-  err = array_add(child->p_children, (void *) child, NULL);
+  err = array_add(parent->p_children, (void *) child, NULL);
   spinlock_release(&parent->p_lock);
 
   if (err != 0) {
@@ -217,7 +206,6 @@ sys_fork(struct trapframe* tf,
   // return
   *retval = child->p_pid;
   return 0;
-
 }
 
 // #endif
