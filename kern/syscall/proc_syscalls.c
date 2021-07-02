@@ -11,6 +11,9 @@
 #include <copyinout.h>
 
 #include <mips/trapframe.h>
+#include <synch.h>
+#include <vm.h>
+#include <vfs.h>
 
 #include "opt-A2.h"
 
@@ -43,10 +46,27 @@ void sys__exit(int exitcode) {
   /* note: curproc cannot be used after this call */
   proc_remthread(curthread);
 
+#if OPT_A2
+  // lock_acquire(p->p_lk);
+  // If parent has already exited or if already called waitpid (autopsy done)
+  if (p->p_parent == NULL || p->p_parent == 0) {
+    // children should delete themselves since they won't have a parent, 
+    // zombies only when parent alive
+    // lock_release(p->p_lk);
+    proc_destroy(p); 
+  } else {
+    lock_acquire(p->p_lk);
+    p->p_alive = 0;
+    p->p_exit_code = exitcode;
+    cv_signal(p->p_cv, p->p_lk);
+    lock_release(p->p_lk);
+  }
+#else
   /* if this is the last user process in the system, proc_destroy()
      will wake up the kernel menu thread */
   proc_destroy(p);
   
+#endif
   thread_exit();
   /* thread_exit() does not return, so we should never get here */
   panic("return from thread_exit in sys_exit\n");
@@ -57,18 +77,18 @@ void sys__exit(int exitcode) {
 int
 sys_getpid(pid_t *retval)
 {
-// #if OPT_A2
+#if OPT_A2
   spinlock_acquire(&curproc->p_lock);
   *retval = curproc->p_pid;
   spinlock_release(&curproc->p_lock);
   return(0);
 
-// #else
+#else
   /* for now, this is just a stub that always returns a PID of 1 */
   /* you need to fix this to make it work properly */
   *retval = 1;
   return(0);
-// #endif
+#endif
 }
 
 /* stub handler for waitpid() system call                */
@@ -82,6 +102,36 @@ sys_waitpid(pid_t pid,
   int exitstatus;
   int result;
 
+  if (options != 0) {
+    return(EINVAL);
+  }
+
+// #if OPT_A2
+//   // Validate tht the given pid is from children
+//   bool is_child = false;
+//   struct proc *parent = curproc;
+//   lock_acquire(parent->p_lk);
+//   for (unsigned int i = 0; i < array_num(parent->p_children); i++) {
+//     struct proc *child = array_get(parent->p_children, i);
+//     if (child->p_pid == pid) {
+//       is_child = true;
+//       // lock_acquire(child->p_lk);
+//       while(child->p_alive == 1) {
+//         // cv_wait(child->p_cv, child->p_lk);
+//         cv_wait(child->p_cv, parent->p_lk); //
+//       }
+//       exitstatus = _MKWAIT_EXIT(child->p_exit_code);
+//       // lock_release(child->p_lk);
+//       break;
+//     }
+//   }
+//   lock_release(parent->p_lk);
+//   if (!is_child) {
+//     *retval = -1;
+//     return ESRCH;
+//   }
+
+// #else
   /* this is just a stub implementation that always reports an
      exit status of 0, regardless of the actual exit status of
      the specified process.   
@@ -91,11 +141,10 @@ sys_waitpid(pid_t pid,
      Fix this!
   */
 
-  if (options != 0) {
-    return(EINVAL);
-  }
   /* for now, just pretend the exitstatus is 0 */
   exitstatus = 0;
+
+// #endif
   result = copyout((void *)&exitstatus,status,sizeof(int));
   if (result) {
     return(result);
@@ -141,11 +190,11 @@ sys_fork(struct trapframe* tf,
   spinlock_acquire(&parent->p_lock);
   child->p_parent = parent;
   err = array_add(child->p_children, (void *) child, NULL);
-  spinlock_release(&child->p_lock);
+  spinlock_release(&parent->p_lock);
 
   if (err != 0) {
     proc_destroy(child);
-    return err;
+    return err; 
   }
 
   // create a thread for the child process

@@ -1,0 +1,29 @@
+dir ../os161-1.99/kern/compile/ASST2
+target remote unix:.sockets/gdb
+
+p uw-testbin/onefork
+
+p uw-testbin/pidcheck
+
+p uw-testbin/widefork
+
+p testbin/forktest
+
+sys161 kernel "p uw-testbin/SOMETEST"
+subprocess.run(['sys161', 'kernel-ASST2', 'p uw-testbin/onefork;q']
+
+
+(6 marks) onefork 
+(6 marks) pidcheck 
+(9 marks) widefork 
+(9 marks) forktest 
+(9 marks) hogparty 
+(9 marks) sty
+(4 marks) argtesttest 
+(6 marks) argtest tests 
+(4 marks) add
+
+https://student.cs.uwaterloo.ca/~cs350/S21/assignments/a2-hints.shtml#testing
+
+
+

@@ -107,11 +107,27 @@ proc_create(const char *name)
 #endif // UW
 
 // #if OPT_A2
+	proc->p_alive = 1;
+	proc->p_exit_code = 0;
 	proc->p_parent = NULL;
 	proc->p_children = array_create();
 	if(proc->p_children == NULL) {
 		kfree(proc->p_name);
 		kfree(proc);
+		return NULL;
+	}
+	proc->p_lk = lock_create("p_lk");
+	//error checking part
+	if (proc->p_lk == NULL){
+		kfree(proc->p_name);
+		kfree(proc);
+		return NULL;
+	}
+	proc->p_cv = cv_create("p_cv");
+	if (proc->p_cv == NULL){
+		kfree(proc->p_name);
+		kfree(proc);
+		lock_destroy(proc->p_lk);
 		return NULL;
 	}
 
@@ -176,6 +192,37 @@ proc_destroy(struct proc *proc)
 	}
 #endif // UW
 
+#if OPT_A2
+	// children should delete themselves since they won't have a parent, 
+	// zombies only when parent alive
+	for (unsigned int i = 0 ; i < array_num(proc->p_children); i++) {
+		struct proc *child = array_get(proc->p_children, i);
+		if (child != NULL) {
+			// proc_destroy(child);
+			// array_remove(proc->p_children, i);
+		
+			// lock_acquire(child->p_lk);
+			// child->p_parent = NULL;
+			// lock_release(child->p_lk);
+
+			// i--;
+			lock_acquire(child->p_lk);
+			if (child->p_alive == 0) {
+				lock_release(child->p_lk);
+				proc_destroy(child);
+			}
+			else {
+				child->p_parent = NULL;
+				lock_release(child->p_lk);
+			}
+		}
+  	}
+	lock_destroy(proc->p_lk);
+	cv_destroy(proc->p_cv);
+	array_init(proc->p_children); //
+	array_destroy(proc->p_children);
+#endif
+
 	threadarray_cleanup(&proc->p_threads);
 	spinlock_cleanup(&proc->p_lock);
 
@@ -196,11 +243,6 @@ proc_destroy(struct proc *proc)
 	}
 	V(proc_count_mutex);
 #endif // UW
-
-// if OPT_A2
-
-// #endif
-	
 
 }
 
@@ -292,13 +334,13 @@ proc_create_runprogram(const char *name)
 	V(proc_count_mutex);
 #endif // UW
 
-// #if OPT_A2
+#if OPT_A2
 	/* assign PID to child process and increment the count of pid */
 	P(proc_count_mutex); 
 	proc->p_pid = pid_counter;
 	pid_counter++;
 	V(proc_count_mutex);
-// #endif
+#endif
 
 	return proc;
 }

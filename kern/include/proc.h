@@ -64,9 +64,13 @@ struct proc {
 	struct vnode *p_cwd;		/* current working directory */
 
 // #if OPT_A2
+	int p_alive;	// 0 = dead, 1 = alive, 2 = zombie
+	int p_exit_code;
 	pid_t p_pid;
 	struct proc *p_parent;
 	struct array *p_children;
+	struct lock* p_lk;
+	struct cv* p_cv;
 // #endif
 
 #ifdef UW
