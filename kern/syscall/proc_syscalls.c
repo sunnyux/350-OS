@@ -47,60 +47,25 @@ void sys__exit(int exitcode) {
   proc_remthread(curthread);
 
 #if OPT_A2
-  // if (p->p_parent == NULL || !check_p_alive(p->p_parent)) {
-  //   // children should delete themselves since they won't have a parent, 
-  //   // zombies only when parent alive
-  //   for (unsigned i = 0; i < array_num(p->p_children); i++) {
-  //     struct proc *child = array_get(p->p_children, i);
-  //     lock_acquire(child->p_lk);
-  //     // if (child != NULL && !check_p_alive(child)) {
-  //     if (child != NULL && !child->p_alive) {
-  //       DEBUG(DB_SYSCALL, "in the if statement, before lock_release");
-  //       lock_release(child->p_lk);
-  //       DEBUG(DB_SYSCALL, "in the if statement, after lock_release");
-  //       proc_destroy(child);
-  //       array_remove(p->p_children, i);
-  //       i--;
-  //     }
-  //     lock_release(child->p_lk);
-  //   }
-  //   proc_destroy(p); 
-  // } else {
-  //   lock_acquire(p->p_lk);
-  //   p->p_alive = false;
-  //   p->p_exit_code = exitcode;
-  //   cv_signal(p->p_cv, p->p_parent->p_lk);
-  //   lock_release(p->p_lk);
-  // }
-
-
   /* If parent is alive, the children need to stay alive */
-  if (p->p_parent != NULL) {
-    lock_acquire(p->p_parent->p_lk);
-    if (p->p_parent->p_alive) {
-      lock_release(p->p_parent->p_lk);
+  if (p->p_parent != NULL && check_p_alive(p->p_parent)) {
       lock_acquire(p->p_lk);
       p->p_alive = false;
       p->p_exit_code = exitcode;
       cv_signal(p->p_cv, p->p_parent->p_lk);
       lock_release(p->p_lk);
-    }
   } else {
     /* children that also terminated should delete themselves 
        since they won't have a parent, zombies only when parent alive */
     for (unsigned i = 0; i < array_num(p->p_children); i++) {
       struct proc *child = array_get(p->p_children, i);
-      lock_acquire(child->p_lk);
-      if (child != NULL && !child->p_alive) {
-        lock_release(child->p_lk);
+      if (child != NULL && !check_p_alive(child)) {
         proc_destroy(child);
         array_remove(p->p_children, i);
         i--;
       }
-      lock_release(child->p_lk);
     }
-    /* parent has already exited or already called waitpid (autopsy done) */
-    proc_destroy(p); 
+    proc_destroy(p);
   }
 #else
   /* if this is the last user process in the system, proc_destroy()

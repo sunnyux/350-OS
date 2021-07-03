@@ -197,8 +197,14 @@ proc_destroy(struct proc *proc)
         struct proc *child = array_get(proc->p_children, i);
         if (child != NULL) {
             lock_acquire(child->p_lk);
-            child->p_parent = NULL;
-            lock_release(child->p_lk);
+            if (!child->p_alive) {
+            // if (!check_p_alive(child)) {
+                lock_release(child->p_lk);
+                proc_destroy(child);
+            } else {
+                child->p_parent = NULL;
+                lock_release(child->p_lk);
+            }
         }
     }
     array_setsize(proc->p_children, 0);

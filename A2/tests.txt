@@ -9,7 +9,7 @@ p uw-testbin/widefork
 
 p testbin/forktest
 
-sys161 kernel "p uw-testbin/SOMETEST"
+sys161 kernel "p testbin/forktest;q"
 subprocess.run(['sys161', 'kernel-ASST2', 'p uw-testbin/onefork;q']
 
 
