@@ -356,13 +356,16 @@ as_define_stack(struct addrspace *as, vaddr_t *stackptr, char** args, int argc)
 	}
 
 	/* the stack pointer: must be 8-byte aligned */
-    *stackptr = ROUNDUP(*stackptr, 8);
+    *stackptr = ROUNDUP(*stackptr, 8) - 8;
 
     /* First push on the args (i.e. the strings) onto the stack 
        and keep track of the address of each string */
     int result;
     size_t argsize = 128 * sizeof(char);
     vaddr_t *stackaddr = kmalloc((argc) * sizeof(vaddr_t));
+	if (stackaddr == NULL) {
+		return ENOMEM;
+	}
 
     for (int i = argc - 1; i >= 0; i--) {
     	*stackptr -= argsize;
@@ -375,15 +378,13 @@ as_define_stack(struct addrspace *as, vaddr_t *stackptr, char** args, int argc)
     }
 
 	/* Next put a NULL terminate array of pointers to the strings */
-	*stackptr -= sizeof(vaddr_t);
-	result = copyout((const void*) &result, (userptr_t)*stackptr, sizeof(vaddr_t));
-	if (result != 0) {
-		kfree(stackaddr);
-		return result;
-	}
-	for (int i = argc - 1; i >= 0; i--){
+	for (int i = argc; i >= 0; i--){
 		*stackptr -= sizeof(vaddr_t);
-		result = copyout((const void*) &stackaddr[i], (userptr_t)*stackptr, sizeof(vaddr_t));
+		if (i == argc) {
+			result = copyout((const void*) &result, (userptr_t)*stackptr, sizeof(vaddr_t));
+		} else {
+			result = copyout((const void*) &stackaddr[i], (userptr_t)*stackptr, sizeof(vaddr_t));
+		}
 		if (result != 0) {
 			kfree(stackaddr);
 			return result;

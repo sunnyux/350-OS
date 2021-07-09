@@ -244,7 +244,7 @@ sys_execv(const char *program, char **args)
   while(args[argc] != NULL) {
     argc++;
   }
-  // kprintf("argc: %d\n", argc);
+  kprintf("argc: %d\n", argc);
 
   /* copy args */
   char **argv = kmalloc(MAX_STR_SIZE * sizeof(char *));
