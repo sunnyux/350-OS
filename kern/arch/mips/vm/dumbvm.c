@@ -373,15 +373,14 @@ as_define_stack(struct addrspace *as, vaddr_t *stackptr, char** args, int argc)
 			return result;
 		}
     }
-    
-    *stackptr -= sizeof(vaddr_t);
-	result = copyout((const void*) &result, (userptr_t)*stackptr, sizeof(vaddr_t));
-	if (result != 0) {
-			kfree(stackaddr);
-			return result;
-		}
 
 	/* Next put a NULL terminate array of pointers to the strings */
+	*stackptr -= sizeof(vaddr_t);
+	result = copyout((const void*) &result, (userptr_t)*stackptr, sizeof(vaddr_t));
+	if (result != 0) {
+		kfree(stackaddr);
+		return result;
+	}
 	for (int i = argc - 1; i >= 0; i--){
 		*stackptr -= sizeof(vaddr_t);
 		result = copyout((const void*) &stackaddr[i], (userptr_t)*stackptr, sizeof(vaddr_t));

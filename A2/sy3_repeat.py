@@ -15,5 +15,6 @@ for r in range(2000):
 	else: 
 		print(str(r))
 
+print(output)
 print("Done all tests")
 
