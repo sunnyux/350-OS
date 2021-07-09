@@ -38,6 +38,9 @@
 #include <addrspace.h>
 #include <vm.h>
 
+#include <copyinout.h>
+#include "opt-A2.h"
+
 /*
  * Dumb MIPS-only "VM system" that is intended to only be just barely
  * enough to struggle off the ground.
@@ -343,12 +346,62 @@ as_complete_load(struct addrspace *as)
 }
 
 int
-as_define_stack(struct addrspace *as, vaddr_t *stackptr)
+as_define_stack(struct addrspace *as, vaddr_t *stackptr, char** args, int argc)
 {
+#if OPT_A2
 	KASSERT(as->as_stackpbase != 0);
+	*stackptr = USERSTACK;
+	if (argc == 1) {
+		return 0;
+	}
 
+	/* the stack pointer: must be 8-byte aligned */
+	*stackptr = ROUNDUP(*stackptr, 8) - 8;
+
+	/* First push on the args (i.e. the strings) onto the stack 
+	   and keep track of the address of each string */
+	int result;
+	int MAX_STR_SIZE = 128;
+	size_t argsize = MAX_STR_SIZE * sizeof(char);
+	vaddr_t *stackaddr = kmalloc((argc) * sizeof(vaddr_t));
+	for (int i = argc; i >= 0; i--) {
+		if (i == argc) {
+			stackaddr[i] = (vaddr_t) NULL;
+			continue;
+		}
+		*stackptr -= argsize;
+		kprintf("as_define_stack: args[%d] is %s\n", i, args[i]);
+		result = copyout((const void *) args[i], (userptr_t) *stackptr, argsize);
+		if (result) {
+			return result;
+		}
+		stackaddr[i] = *stackptr;
+	}
+	kprintf("done first for loop in as_define_stack\n");
+
+	/* Next put a NULL terminate array of pointers to the strings */
+	// *stackptr -= sizeof(vaddr_t);
+	// stackaddr[argc] = (vaddr_t)NULL;
+	result = copyout((const void *) stackaddr[argc], (userptr_t) *stackptr, sizeof(vaddr_t));
+	if (result) {
+		return result;
+	}
+	for (int i = 0; i < argc; i++) {
+		*stackptr += sizeof(vaddr_t);
+		result = copyout((const void *) stackaddr[i], (userptr_t)*stackptr, sizeof(vaddr_t));
+		if (result) {
+		return result;
+		}
+	}
+	kfree(stackaddr);
+	
+	return 0;
+
+#else
+	KASSERT(as->as_stackpbase != 0);
 	*stackptr = USERSTACK;
 	return 0;
+#endif
 }
 
 int

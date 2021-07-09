@@ -219,7 +219,7 @@ sys_fork(struct trapframe* tf,
 }
 
 int
-sys_execv(const char *program)//, char **args)
+sys_execv(const char *program, char **args)
 {
 	struct addrspace *as;
 	struct vnode *v;
@@ -240,6 +240,29 @@ sys_execv(const char *program)//, char **args)
   }
   kprintf("progname: %s\n", progname);
 
+  /* count the number of args and copy */
+  int argc = 0;
+  char **argv = kmalloc(MAX_STR_SIZE * sizeof(char *));
+  if (argv == NULL) {
+    return ENOMEM;
+  }
+  while(args[argc] != NULL) {
+    argc++;
+  }
+  kprintf("argc: %d\n", argc);
+  for (int i = 0; i < argc; i++) {
+    argv[i] = kmalloc(MAX_STR_SIZE * sizeof(char));
+    if (argv[i] == NULL) {
+      return ENOMEM;
+    }
+    result = copyin((const_userptr_t) args[i], argv[i], MAX_STR_SIZE);
+    if (result != 0) {
+      return result;
+    }
+    kprintf("argv %d is %s\n", i, argv[i]);
+  }
+  argv[argc] = NULL;
+  
 	/* Open the file. */
 	result = vfs_open(progname, O_RDONLY, 0, &v);
 	if (result) {
@@ -272,7 +295,7 @@ sys_execv(const char *program)//, char **args)
 	vfs_close(v);
 
 	/* Define the user stack in the address space */
-	result = as_define_stack(as, &stackptr);
+	result = as_define_stack(as, &stackptr, argv, argc);
 	if (result) {
 		/* p_addrspace will go away when curproc is destroyed */
 		return result;

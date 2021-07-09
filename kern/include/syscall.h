@@ -60,7 +60,7 @@ void enter_new_process(int argc, userptr_t argv, vaddr_t stackptr,
 // prototype for your new fork() handler function somewhere in this file
 #if OPT_A2
 int sys_fork(struct trapframe* tf, pid_t* retval);
-int sys_execv(const char *program);
+int sys_execv(const char *program, char **args);
 #endif
 
 int sys_reboot(int code);
