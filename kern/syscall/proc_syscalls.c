@@ -218,8 +218,6 @@ sys_fork(struct trapframe* tf,
   return 0;
 }
 
-// int
-// sys_execv(const char *program, char **args)
 int
 sys_execv(userptr_t program, userptr_t *args)
 {
