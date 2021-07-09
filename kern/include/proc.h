@@ -63,7 +63,7 @@ struct proc {
     /* VFS */
     struct vnode *p_cwd;        /* current working directory */
 
-// #if OPT_A2
+#if OPT_A2
     bool p_alive;
     int p_exit_code;
     pid_t p_pid;
@@ -71,7 +71,7 @@ struct proc {
     struct array *p_children;
     struct lock* p_lk;
     struct cv* p_cv;
-// #endif
+#endif
 
 #ifdef UW
   /* a vnode to refer to the console device */
@@ -114,9 +114,8 @@ struct addrspace *curproc_getas(void);
 /* Change the address space of the current process, and return the old one. */
 struct addrspace *curproc_setas(struct addrspace *);
 
-
-#endif /* _PROC_H_ */
-
 #if OPT_A2
 bool check_p_alive(struct proc* proc);
 #endif
+
+#endif /* _PROC_H_ */

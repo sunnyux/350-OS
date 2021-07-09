@@ -17,7 +17,9 @@ p uw-testbin/argtest test
 
 p testbin/sty
 
-p testbin/add
+p testbin/add 3 4
+
+sys161 kernel "p uw-testbin/argtesttest;q"
 
 sys161 kernel "p testbin/forktest;q"
 subprocess.run(['sys161', 'kernel-ASST2', 'p uw-testbin/onefork;q']

@@ -49,7 +49,9 @@
 #include <vnode.h>
 #include <vfs.h>
 #include <synch.h>
-#include <kern/fcntl.h>  
+#include <kern/fcntl.h> 
+
+#include "opt-A2.h"
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
@@ -69,9 +71,9 @@ static struct semaphore *proc_count_mutex;
 struct semaphore *no_proc_sem;   
 #endif  // UW
 
-// #if OPT_A2
+#if OPT_A2
 static volatile unsigned int pid_counter;
-// #endif
+#endif
 
 
 /*
@@ -106,7 +108,7 @@ proc_create(const char *name)
     proc->console = NULL;
 #endif // UW
 
-// #if OPT_A2
+#if OPT_A2
     proc->p_alive = true;
     proc->p_exit_code = 0;
     proc->p_parent = NULL;
@@ -117,7 +119,7 @@ proc_create(const char *name)
         return NULL;
     }
     proc->p_lk = lock_create("p_lk");
-    //error checking part
+
     if (proc->p_lk == NULL){
         kfree(proc->p_name);
         kfree(proc);
@@ -131,7 +133,7 @@ proc_create(const char *name)
         return NULL;
     }
 
-// #endif // OPT_A2
+#endif // OPT_A2
     return proc;
 }
 
@@ -258,9 +260,9 @@ proc_bootstrap(void)
   }
 #endif // UW 
 
-// #if OPT_A2
+#if OPT_A2
   pid_counter = 1;  // PID > 0
-// #endif
+#endif
 }
 
 /*

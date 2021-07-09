@@ -345,64 +345,65 @@ as_complete_load(struct addrspace *as)
 	return 0;
 }
 
+#if OPT_A2
 int
 as_define_stack(struct addrspace *as, vaddr_t *stackptr, char** args, int argc)
 {
-#if OPT_A2
 	KASSERT(as->as_stackpbase != 0);
 	*stackptr = USERSTACK;
-	if (argc == 1) {
+	if (argc == 0) {
 		return 0;
 	}
 
 	/* the stack pointer: must be 8-byte aligned */
-	*stackptr = ROUNDUP(*stackptr, 8) - 8;
+    *stackptr = ROUNDUP(*stackptr, 8);
 
-	/* First push on the args (i.e. the strings) onto the stack 
-	   and keep track of the address of each string */
-	int result;
-	int MAX_STR_SIZE = 128;
-	size_t argsize = MAX_STR_SIZE * sizeof(char);
-	vaddr_t *stackaddr = kmalloc((argc) * sizeof(vaddr_t));
-	for (int i = argc; i >= 0; i--) {
-		if (i == argc) {
-			stackaddr[i] = (vaddr_t) NULL;
-			continue;
-		}
-		*stackptr -= argsize;
-		kprintf("as_define_stack: args[%d] is %s\n", i, args[i]);
-		result = copyout((const void *) args[i], (userptr_t) *stackptr, argsize);
-		if (result) {
+    /* First push on the args (i.e. the strings) onto the stack 
+       and keep track of the address of each string */
+    int result;
+    size_t argsize = 128 * sizeof(char);
+    vaddr_t *stackaddr = kmalloc((argc) * sizeof(vaddr_t));
+
+    for (int i = argc - 1; i >= 0; i--) {
+    	*stackptr -= argsize;
+		stackaddr[i] = *stackptr;
+		result = copyout((const void*)args[i], (userptr_t)*stackptr, argsize);
+		if (result != 0) {
+			kfree(stackaddr);
 			return result;
 		}
-		stackaddr[i] = *stackptr;
-	}
-	kprintf("done first for loop in as_define_stack\n");
+    }
+    
+    *stackptr -= sizeof(vaddr_t);
+	result = copyout((const void*) &result, (userptr_t)*stackptr, sizeof(vaddr_t));
+	if (result != 0) {
+			kfree(stackaddr);
+			return result;
+		}
 
 	/* Next put a NULL terminate array of pointers to the strings */
-	// *stackptr -= sizeof(vaddr_t);
-	// stackaddr[argc] = (vaddr_t)NULL;
-	result = copyout((const void *) stackaddr[argc], (userptr_t) *stackptr, sizeof(vaddr_t));
-	if (result) {
-		return result;
-	}
-	for (int i = 0; i < argc; i++) {
-		*stackptr += sizeof(vaddr_t);
-		result = copyout((const void *) stackaddr[i], (userptr_t)*stackptr, sizeof(vaddr_t));
-		if (result) {
-		return result;
+	for (int i = argc - 1; i >= 0; i--){
+		*stackptr -= sizeof(vaddr_t);
+		result = copyout((const void*) &stackaddr[i], (userptr_t)*stackptr, sizeof(vaddr_t));
+		if (result != 0) {
+			kfree(stackaddr);
+			return result;
 		}
 	}
+	
 	kfree(stackaddr);
 	
 	return 0;
+}
 
 #else
+int
+as_define_stack(struct addrspace *as, vaddr_t *stackptr) {
 	KASSERT(as->as_stackpbase != 0);
 	*stackptr = USERSTACK;
 	return 0;
-#endif
 }
+#endif
 
 int
 as_copy(struct addrspace *old, struct addrspace **ret)

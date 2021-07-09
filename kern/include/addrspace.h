@@ -36,6 +36,7 @@
 
 
 #include <vm.h>
+#include "opt-A2.h"
 
 struct vnode;
 
@@ -106,9 +107,11 @@ int               as_define_region(struct addrspace *as,
                                    int executable);
 int               as_prepare_load(struct addrspace *as);
 int               as_complete_load(struct addrspace *as);
+#if OPT_A2
 int as_define_stack(struct addrspace *as, vaddr_t *stackptr, char** args, int argc);
-// int               as_define_stack(struct addrspace *as, vaddr_t *initstackptr);
-
+#else
+int               as_define_stack(struct addrspace *as, vaddr_t *initstackptr);
+#endif
 
 /*
  * Functions in loadelf.c
