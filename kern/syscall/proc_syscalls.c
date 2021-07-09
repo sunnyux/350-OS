@@ -218,8 +218,10 @@ sys_fork(struct trapframe* tf,
   return 0;
 }
 
+// int
+// sys_execv(const char *program, char **args)
 int
-sys_execv(const char *program, char **args)
+sys_execv(userptr_t program, userptr_t *args)
 {
 	struct addrspace *as;
 	struct vnode *v;
@@ -232,7 +234,7 @@ sys_execv(const char *program, char **args)
   if (progname == NULL) {
     return ENOMEM;
   }
-  result = copyinstr((const_userptr_t) program, (void *) progname, MAX_STR_SIZE, NULL);
+  result = copyinstr(program, (void *) progname, MAX_STR_SIZE, NULL);
   if (result != 0) {
     kfree(progname);
     return result;
@@ -244,7 +246,7 @@ sys_execv(const char *program, char **args)
   while(args[argc] != NULL) {
     argc++;
   }
-  kprintf("argc: %d\n", argc);
+  // kprintf("argc: %d\n", argc);
 
   /* copy args */
   char **argv = kmalloc(MAX_STR_SIZE * sizeof(char *));
