@@ -6,7 +6,7 @@ import re
 starting = "OS/161 kernel: p testbin/forktest\ntestbin/forktest: Starting."
 expected = re.compile("0*1*2*3*")
 complete = "testbin/forktest: Complete.\nOperation took"
-shutting_down = "Shutting down.\nThe system is halted."
+shutting_down = "The system is halted."
 
 test = "p testbin/forktest;q"
 

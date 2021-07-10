@@ -5,12 +5,12 @@ import re
 
 starting = "p uw-testbin/argtest test\nargc   : 2"
 expected = "argv[0] -> uw-testbin/argtest\nargv[1] -> test\nargv[2] -> [NULL]\nOperation took"
-shutting_down = "Shutting down.\nThe system is halted."
+shutting_down = "The system is halted."
 
 
 test = "p uw-testbin/argtest test;q"
 
-for r in range(2000):
+for r in range(1000):
     output = subprocess.run(['sys161', 'kernel-ASST2', test], capture_output=True, text=True).stdout
     if starting in output and expected in output and shutting_down in output and "panic" not in output:
         print(str(r))

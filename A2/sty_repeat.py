@@ -4,7 +4,7 @@ import sys
 import re
 
 expected = "OS/161 kernel: p testbin/sty\nOperation took "
-shutting_down = "Shutting down.\nThe system is halted."
+shutting_down = "The system is halted."
 
 
 test = "p testbin/sty;q"

@@ -4,7 +4,7 @@ import sys
 import re
 
 expected = "OS/161 kernel: p uw-testbin/pidcheck\nC: 2\nPC: 2\nPP: 1\nOperation took"
-shutting_down = "Shutting down.\nThe system is halted."
+shutting_down = "The system is halted."
 
 test = "p uw-testbin/pidcheck;q"
 

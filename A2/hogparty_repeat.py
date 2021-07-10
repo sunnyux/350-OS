@@ -5,7 +5,7 @@ import re
 
 starting = "OS/161 kernel: p uw-testbin/hogparty"
 expected = re.compile("[xyz]+\n[xyz]+\n[xyz]+")
-shutting_down = "Shutting down.\nThe system is halted."
+shutting_down = "The system is halted."
 
 test = "p uw-testbin/hogparty;q"
 

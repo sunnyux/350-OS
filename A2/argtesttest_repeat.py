@@ -4,7 +4,7 @@ import sys
 import re
 
 expected = "p uw-testbin/argtesttest\nargc: 3\nargv[0]: argtesttest\nargv[1]: first\nargv[2]: second\nargv[3]: [NULL]\nOperation took"
-shutting_down = "Shutting down.\nThe system is halted."
+shutting_down = "The system is halted."
 
 
 test = "p uw-testbin/argtesttest;q"

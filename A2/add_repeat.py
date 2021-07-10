@@ -3,7 +3,7 @@ import subprocess
 import sys
 import re
 
-shutting_down = "Shutting down.\nThe system is halted."
+shutting_down = "The system is halted."
 
 for i in range(100, 200):
     for j in range(5100, 5300):

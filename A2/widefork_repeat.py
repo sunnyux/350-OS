@@ -4,7 +4,7 @@ import sys
 import re
 
 expected = re.compile("P\n[\W\n]*A\n[\W\w\n]*a\n[\w\n]*c\n[\w\n]*")
-shutting_down = "Shutting down.\nThe system is halted."
+shutting_down = "The system is halted."
 
 
 test = "p uw-testbin/widefork;q"

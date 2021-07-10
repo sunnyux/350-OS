@@ -5,7 +5,7 @@ import string
 import random
 
 expected = "TEST SUCCEEDED"
-shutting_down = "Shutting down.\nThe system is halted."
+shutting_down = "The system is halted."
 
 
 for r in range(2000):
