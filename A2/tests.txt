@@ -40,5 +40,10 @@ https://student.cs.uwaterloo.ca/~cs350/S21/assignments/a2-hints.shtml#testing
 python3 onefork_repeat.py &> onefork.log 
 python3 pidcheck_repeat.py &> pidcheck.log
 python3 widefork_repeat.py &> widefork.log
-
+python3 forktest_repeat.py &> forktest.log
+python3 hogparty_repeat.py &> hogparty.log
+python3 sty_repeat.py &> sty.log
+python3 argtesttest_repeat.py &> argtesttest.log
+python3 argtest_test_repeat.py &> argtest_test.log
+python3 add_repeat.py &> add.log
 

@@ -10,7 +10,7 @@ shutting_down = "Shutting down.\nThe system is halted."
 
 test = "p uw-testbin/argtest test;q"
 
-for r in range(10):
+for r in range(2000):
     output = subprocess.run(['sys161', 'kernel-ASST2', test], capture_output=True, text=True).stdout
     if starting in output and expected in output and shutting_down in output and "panic" not in output:
         print(str(r))
