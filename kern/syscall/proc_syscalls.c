@@ -249,6 +249,7 @@ sys_execv(userptr_t program, userptr_t *args)
   /* copy args */
   char **argv = kmalloc(MAX_STR_SIZE * sizeof(char *));
   if (argv == NULL) {
+    kfree(progname);
     return ENOMEM;
   }
 
@@ -256,20 +257,33 @@ sys_execv(userptr_t program, userptr_t *args)
   for (int i = 0; i <= argc - 1; i++) {
     argv[i] = kmalloc(argsize);
     if (argv[i] == NULL) {
+      kfree(progname);
+      kfree(argv);
       return ENOMEM;
     }
     result = copyin((const_userptr_t) args[i], argv[i], argsize);
     if (result != 0) {
+      for (int j = 0; j <= i; j++) {
+        kfree(argv[j]);
+      }
+      kfree(argv);
+      kfree(progname);
       return result;
     }
     // kprintf("argv %d is %s\n", i, argv[i]);
   }
   argv[argc] = NULL;
 
+  kfree(progname);
+
 /* FROM runprogram */
 	/* Open the file. */
 	result = vfs_open(progname, O_RDONLY, 0, &v);
 	if (result != 0) {
+    for (int i = 0; i <= argc; i++) {
+      kfree(argv[i]);
+    }
+    kfree(argv);
 		return result;
 	}
 
@@ -279,6 +293,10 @@ sys_execv(userptr_t program, userptr_t *args)
 	/* Create a new address space. */
 	as = as_create();
 	if (as == NULL) {
+    for (int i = 0; i <= argc; i++) {
+      kfree(argv[i]);
+    }
+    kfree(argv);
 		vfs_close(v);
 		return ENOMEM;
 	}
@@ -290,6 +308,10 @@ sys_execv(userptr_t program, userptr_t *args)
 	/* Load the executable. */
 	result = load_elf(v, &entrypoint);
 	if (result) {
+    for (int i = 0; i <= argc; i++) {
+      kfree(argv[i]);
+    }
+    kfree(argv);
 		/* p_addrspace will go away when curproc is destroyed */
 		vfs_close(v);
 		return result;
@@ -301,18 +323,16 @@ sys_execv(userptr_t program, userptr_t *args)
 	/* Define the user stack in the address space */
 	// result = as_define_stack(as, &stackptr);
   result = as_define_stack(as, &stackptr, argv, argc);
+  for (int i = 0; i <= argc; i++) {
+    kfree(argv[i]);
+  }
+  kfree(argv);
   if (result) {
 		/* p_addrspace will go away when curproc is destroyed */
 		return result;
 	}
 
-  kfree(progname);
   as_destroy(old_as);
-
-  for (int i = 0; i <= argc; i++) {
-    kfree(argv[i]);
-  }
-  kfree(argv);
 
 	/* Warp to user mode. */
 	// enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,
