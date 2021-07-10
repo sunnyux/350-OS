@@ -267,14 +267,11 @@ sys_execv(userptr_t program, userptr_t *args)
         kfree(argv[j]);
       }
       kfree(argv);
-      kfree(progname);
       return result;
     }
     // kprintf("argv %d is %s\n", i, argv[i]);
   }
   argv[argc] = NULL;
-
-  kfree(progname);
 
 /* FROM runprogram */
 	/* Open the file. */
@@ -286,6 +283,8 @@ sys_execv(userptr_t program, userptr_t *args)
     kfree(argv);
 		return result;
 	}
+
+  kfree(progname);
 
 	/* We should be a new process. */
 	// KASSERT(curproc_getas() == NULL);
@@ -323,10 +322,12 @@ sys_execv(userptr_t program, userptr_t *args)
 	/* Define the user stack in the address space */
 	// result = as_define_stack(as, &stackptr);
   result = as_define_stack(as, &stackptr, argv, argc);
+
   for (int i = 0; i <= argc; i++) {
     kfree(argv[i]);
   }
   kfree(argv);
+
   if (result) {
 		/* p_addrspace will go away when curproc is destroyed */
 		return result;
