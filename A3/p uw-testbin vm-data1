@@ -1,0 +1,12 @@
+p uw-testbin vm-data1
+
+
+• (2 marks) vm-data1 (basic test)
+• (3 marks) vm-data3 (basic test)
+• (8 marks) romemwrite (read-only memory test)
+• (8 marks) vm-crash2 (read-only memory test)
+• (8 marks) sort (physical memory management test)
+• (8 marks) matmult (physical memory management test)
+• (8 marks) vm-data1 (physical memory management test)
+• (2 marks) widefork (multi-process test)
+• (3 marks) hogparty (multi-process test)
