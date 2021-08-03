@@ -28,6 +28,7 @@
  */
 
 #include "opt-A2.h"
+#include "opt-A3.h"
 
 #ifndef _SYSCALL_H_
 #define _SYSCALL_H_
@@ -61,6 +62,10 @@ void enter_new_process(int argc, userptr_t argv, vaddr_t stackptr,
 #if OPT_A2
 int sys_fork(struct trapframe* tf, pid_t* retval);
 int sys_execv(userptr_t program, userptr_t *args);
+#endif
+
+#if OPT_A3
+void sys__kill(int exitcode);
 #endif
 
 int sys_reboot(int code);

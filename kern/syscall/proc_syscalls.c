@@ -17,6 +17,7 @@
 #include <kern/fcntl.h>
 
 #include "opt-A2.h"
+#include "opt-A3.h"
 
   /* this implementation of sys__exit does not do anything with the exit code */
   /* this needs to be fixed to get exit() and waitpid() working properly */
@@ -347,3 +348,58 @@ sys_execv(userptr_t program, userptr_t *args)
 
 
 #endif
+
+
+#if OPT_A3
+void sys__kill(int exitcode) {
+  struct addrspace *as;
+  struct proc *p = curproc;
+  /* for now, just include this to keep the compiler from complaining about
+     an unused variable */
+  // (void)exitcode;
+
+  DEBUG(DB_SYSCALL,"Syscall: _exit(%d)\n",exitcode);
+
+  KASSERT(curproc->p_addrspace != NULL);
+  as_deactivate();
+  /*
+   * clear p_addrspace before calling as_destroy. Otherwise if
+   * as_destroy sleeps (which is quite possible) when we
+   * come back we'll be calling as_activate on a
+   * half-destroyed address space. This tends to be
+   * messily fatal.
+   */
+  as = curproc_setas(NULL);
+  as_destroy(as);
+
+  /* detach this thread from its process */
+  /* note: curproc cannot be used after this call */
+  proc_remthread(curthread);
+
+  /* If parent is alive, the children need to stay alive */
+  if (p->p_parent != NULL && check_p_alive(p->p_parent)) {
+      lock_acquire(p->p_lk);
+      p->p_alive = false;
+      p->p_exit_code = exitcode;
+      cv_signal(p->p_cv, p->p_parent->p_lk);
+      lock_release(p->p_lk);
+  } else {
+    /* children that also terminated should delete themselves 
+       since they won't have a parent, zombies only when parent alive */
+    for (unsigned i = 0; i < array_num(p->p_children); i++) {
+      struct proc *child = array_get(p->p_children, i);
+      if (child != NULL && !check_p_alive(child)) {
+        proc_destroy(child);
+        array_remove(p->p_children, i);
+        i--;
+      }
+    }
+    proc_destroy(p);
+  }
+
+  thread_exit();
+  /* thread_exit() does not return, so we should never get here */
+  panic("return from thread_exit in sys_exit\n");
+}
+#endif
+
