@@ -116,6 +116,9 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	uint32_t ehi, elo;
 	struct addrspace *as;
 	int spl;
+#OPT_A3
+	bool reasonly = false;
+#endif
 
 	faultaddress &= PAGE_FRAME;
 
@@ -172,8 +175,16 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	stacktop = USERSTACK;
 
 	if (faultaddress >= vbase1 && faultaddress < vtop1) {
+#if OPT_A3
+		paddr = (faultaddress - vbase1) + as->as_pbase1[0];
+		if (as->as_loadedelf) {
+			reasonly = true;
+		}
+#else
 		paddr = (faultaddress - vbase1) + as->as_pbase1;
+#endif
 	}
+
 	else if (faultaddress >= vbase2 && faultaddress < vtop2) {
 		paddr = (faultaddress - vbase2) + as->as_pbase2;
 	}
@@ -197,15 +208,26 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 		}
 		ehi = faultaddress;
 		elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
+#if OPT_A3
+		if (reasonly) elo &= ~TLBLO_DIRTY;
+#endif
 		DEBUG(DB_VM, "dumbvm: 0x%x -> 0x%x\n", faultaddress, paddr);
 		tlb_write(ehi, elo, i);
 		splx(spl);
 		return 0;
 	}
-
+#if OPT_A3
+	ehi = faultaddress;
+	elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
+	if (reasonly) elo &= ~TLBLO_DIRTY;
+	tlb_random(ehi, elo);
+	splx(spl);
+	return 0;
+#else
 	kprintf("dumbvm: Ran out of TLB entries - cannot handle page fault\n");
 	splx(spl);
 	return EFAULT;
+#endif
 }
 
 struct addrspace *
