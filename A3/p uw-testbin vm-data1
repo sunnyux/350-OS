@@ -1,4 +1,89 @@
-p uw-testbin vm-data1
+p uw-testbin/vm-data1
+
+OS/161 kernel [? for menu]: p uw-testbin/vm-data1
+SUCCEEDED
+Operation took 0.616112080 seconds
+
+------------------------------------------------
+
+p uw-testbin/vm-data3
+
+OS/161 kernel [? for menu]: p uw-testbin/vm-data3
+SUCCEEDED
+Operation took 1.784456520 seconds
+
+------------------------------------------------
+
+p uw-testbin/romemwrite
+
+OS/161 kernel [? for menu]: p uw-testbin/romemwrite
+Trying to write to the text segment
+This program should fail if the text segment is read-only.
+However, the kernel should not crash...
+Fatal user mode trap 1 sig 11 (TLB modify trap, epc 0x40008c, vaddr 0x400050)
+Operation took 0.147747160 seconds
+
+------------------------------------------------
+
+p uw-testbin/vm-crash2
+
+OS/161 kernel [? for menu]: p uw-testbin/vm-crash2
+Fatal user mode trap 1 sig 11 (TLB modify trap, epc 0x40007c, vaddr 0x401890)
+Operation took 0.108198440 seconds
+
+------------------------------------------------
+
+p testbin/sort
+
+OS/161 kernel [? for menu]: p testbin/sort
+testbin/sort: Passed.
+Operation took 5.344666960 seconds
+
+------------------------------------------------
+
+p testbin/matmult
+
+OS/161 kernel [? for menu]: p testbin/matmult
+matmult finished.
+answer is: 8772192 (should be 8772192)
+Passed.
+Operation took 1.696246600 seconds
+
+------------------------------------------------
+
+p uw-testbin/vm-data1
+
+OS/161 kernel [? for menu]: p uw-testbin/vm-data1
+SUCCEEDED
+Operation took 0.624912200 seconds
+
+------------------------------------------------
+
+p uw-testbin/widefork
+
+OS/161 kernel [? for menu]: p uw-testbin/widefork
+P
+P
+A
+B
+P
+a
+b
+C
+c
+Operation took 0.200786200 seconds
+
+------------------------------------------------
+
+p uw-testbin/hogparty
+
+OS/161 kernel [? for menu]: p uw-testbin/hogparty
+zzzzz
+xxxxxy
+yyyy
+Operation took 0.483623360 seconds
+
+------------------------------------------------
 
 
 • (2 marks) vm-data1 (basic test)
