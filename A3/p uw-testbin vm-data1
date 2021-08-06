@@ -35,6 +35,8 @@ Operation took 0.108198440 seconds
 
 p testbin/sort
 
+sys161 kernel "p testbin/sort;p testbin/sort;p testbin/sort;p testbin/sort;p testbin/sort;p testbin/sort;p testbin/sort; q"
+
 OS/161 kernel [? for menu]: p testbin/sort
 testbin/sort: Passed.
 Operation took 5.344666960 seconds
@@ -42,6 +44,8 @@ Operation took 5.344666960 seconds
 ------------------------------------------------
 
 p testbin/matmult
+
+sys161 kernel "p testbin/matmult;p testbin/matmult;p testbin/matmult;p testbin/matmult;p testbin/matmult;p testbin/matmult;p testbin/matmult;p testbin/matmult;p testbin/matmult;q"
 
 OS/161 kernel [? for menu]: p testbin/matmult
 matmult finished.
@@ -52,6 +56,8 @@ Operation took 1.696246600 seconds
 ------------------------------------------------
 
 p uw-testbin/vm-data1
+
+sys161 kernel "p uw-testbin/vm-data1;p uw-testbin/vm-data1;p uw-testbin/vm-data1;p uw-testbin/vm-data1;p uw-testbin/vm-data1;p uw-testbin/vm-data1;p uw-testbin/vm-data1;p uw-testbin/vm-data1;p uw-testbin/vm-data1;p uw-testbin/vm-data1;p uw-testbin/vm-data1;p uw-testbin/vm-data1;p uw-testbin/vm-data1;q"
 
 OS/161 kernel [? for menu]: p uw-testbin/vm-data1
 SUCCEEDED

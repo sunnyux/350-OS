@@ -58,7 +58,7 @@ static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
 #if OPT_A3
 paddr_t frame_base;
 int *coremap;
-int coremap_entries;
+int  coremap_entries;
 bool bootstrap_done = false;
 #endif
 
@@ -66,11 +66,11 @@ void vm_bootstrap(void)
 {
 #if OPT_A3
     paddr_t lo, hi;
-    int npages;
+    int ram_pages;
     ram_getsize(&lo, &hi);
 
-    npages = DIVROUNDUP((hi - lo) * sizeof(int) / PAGE_SIZE, PAGE_SIZE);
-    frame_base = ROUNDUP(lo + (npages * PAGE_SIZE), PAGE_SIZE);
+    ram_pages = DIVROUNDUP((hi - lo) * sizeof(int) / PAGE_SIZE, PAGE_SIZE);
+    frame_base = ROUNDUP(lo + (ram_pages * PAGE_SIZE), PAGE_SIZE);
     coremap_entries = ROUNDUP((hi - frame_base) / PAGE_SIZE, PAGE_SIZE);
 
     coremap = (int *)PADDR_TO_KVADDR(lo); 
